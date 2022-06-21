@@ -1,7 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-
+<c:set var="path" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
 <html>
   <head>
@@ -11,9 +11,26 @@
       	text-align:center;
       }
     </style>
+   
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="author" content="Kenneth Hu">
+
+    <!-- <link rel="stylesheet" type="text/css" href="${path}/css/main.css"> -->
+    
+    <!-- <script src="https://raw.githubusercontent.com/shawntabrizi/ethbalance/master/web3.min.js"></script> -->
+    
+    
+    <script src="../views/js/web3.min.js"></script>
+
+    
+    
   </head>
 
   <body>
+    
     <table border=0 width=800>
       <tr>
         
@@ -131,5 +148,144 @@
         </td>   		
       </tr>  
     </table>
+    
+    
+    
+     <div class="container">
+
+        <h1>부채증명원 전송</h1>
+
+        <label for="name" class="col-lg-2 control-label"><h3>Node Info</h3></label>
+        <input id="NodeInfo" type="text">
+		
+		<hr>
+
+        <label for="name" class="col-lg-2 control-label"><h3>Balance</h3></label>
+		<p>Account : <input id="Account" type="text"> </p>
+        <p>Balance : <input id="Balance" type="text"></p>
+		 <button id="checkBalance">Check Balance</button>
+
+		<hr>
+		<label for="name" class="col-lg-2 control-label"><h3>Transfer</h3></label>
+		<p>From(신한은행) : &nbsp &nbsp &nbsp <input id="From" type="text"> </p>
+		<p>To(타행) : &nbsp &nbsp &nbsp &nbsp &nbsp <input id="To" type="text"> </p>
+        <p>Amount : &nbsp <input id="Amount" type="text"></p>
+		<p>datainfo : &nbsp <input id="datainfo" type="text"></p>
+        <button id="Transfer">Transfer</button>
+        <p>Transaction Hash : &nbsp  <span id="Tx"></span></p>
+
+
+    </div>
+    
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    
+    
+
+    <script>
+
+		$( document ).ready(function() {
+			console.log( "ready!" );
+			
+			if (typeof web3 !== 'undefined') {
+				web3 = new Web3(web3.currentProvider);
+			} else {
+					// set the provider you want from Web3.providers
+				web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+			}
+			web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+			
+			
+			
+			
+			/* Get Node Info */
+			web3.eth.getNodeInfo(function(error, result){
+				if(error){
+					console.log( "error" ,error);
+				}
+				else{
+					console.log( "result",result );
+					$('#NodeInfo').val(result);
+				}
+			});
+			
+			//$('#datainfo').val(web3.eth.abi.decodeParameters(['string', 'string' ], '0x8c952a420000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000077465737431323300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c74657374206d6573736167650000000000000000000000000000000000000000'));
+		
+			//alert(web3.eth.abi.decodeParameters(['string', 'string'], '0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000077465737431323300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000568736b696d000000000000000000000000000000000000000000000000000000'));
+
+			/*
+			const object1 = web3.eth.abi.decodeParameters([{
+													type: 'string',
+													name: 'myNumber'
+													
+												},{
+													type: 'string',
+													name: 'myString'
+												}], '0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000077465737431323300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000568736b696d000000000000000000000000000000000000000000000000000000');
+			*/
+		
+
+			const object1 = web3.eth.abi.decodeParameters(['string','string'], '0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000077465737431323300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000568736b696d000000000000000000000000000000000000000000000000000000')
+
+			$('#datainfo').val(Object.values(object1))
+
+			/*Get Balance */
+			web3.eth.getAccounts(function(error, accounts) {
+				if(error) {
+					console.log(error);
+				}
+				$('#Account').val(accounts[0]);
+				web3.eth.getBalance(accounts[0]).then(function(result){
+					console.log( "Balance : " ,web3.utils.fromWei(result, 'ether'));
+					$('#Balance').val(web3.utils.fromWei(result, 'ether'));
+				});
+			});
+			
+			$('#checkBalance').click(function() {
+			    var _account = $('#Account').val();
+				web3.eth.getBalance(_account).then(function(result){
+					console.log( "Balance : " ,web3.utils.fromWei(result, 'ether'));
+					$('#Balance').val(web3.utils.fromWei(result, 'ether'));
+				});
+			});
+			
+			
+			/* Transfer */
+			$('#Transfer').click(function() {
+				$('#Tx').text('');
+				var _from = $('#From').val();
+			    var _to = $('#To').val();
+				var _Amount = $('#Amount').val();
+				var _datainfo = $('#datainfo').val();
+				var txnObject = {
+					"from":_from,
+					"to": _to,
+					"value": web3.utils.toWei(_Amount,'ether'),
+					// "gas": 21000,         (optional)
+					// "gasPrice": 4500000,  (optional)
+					"data": 
+					web3.eth.abi.encodeParameters(['string','string'], ['test123', 'hskim'])
+					,  //(optional)
+					// "nonce": 10           (optional)
+				}
+			
+				web3.eth.sendTransaction(txnObject, function(error, result){
+					if(error){
+						console.log( "Transaction error" ,error);
+					}
+					else{
+						var txn_hash = result; //Get transaction hash
+						$('#Tx').text(txn_hash);
+
+						
+					}
+				});
+				
+			});
+			
+		
+		});
+	
+    </script>
 </body>
 </html>
